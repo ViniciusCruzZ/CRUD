@@ -7,35 +7,69 @@ const btnDel = document.getElementById('delete');
 
 let id = 0;
 
+
 btnAdd.addEventListener('click', function() {
     const tableName = prompt(`NAME: `);
     const tableDescription = prompt(`DESCRIPTION: `);
+    
     if (tableName && tableDescription) {
-        addRow(tableName, tableDescription)
+        const data = {
+            id,
+            name: tableName,
+            description: tableDescription
+        };
+        
+        addRow(data);
+        saveToLocalStorage(data);
+        
+        id++;
+        
     } else {
-        alert('Nome e descrição devem ser preenchidos')
+        alert('Nome e descrição devem ser preenchidos');
     }
 });
 
-function addRow(tableName, tableDescription) {
+function saveToLocalStorage(data) {
+    let tableData = localStorage.getItem('tableData');
+    if (!tableData) {
+        tableData = [];
+    } else {
+        tableData = JSON.parse(tableData);
+    }
+    tableData.push(data);
+    localStorage.setItem('tableData', JSON.stringify(tableData));
+}
+
+
+function loadFromLocalStorage() {
+    const tableData = localStorage.getItem('tableData');
+    if (tableData) {
+      const data = JSON.parse(tableData);
+      data.forEach(item => addRow(item));
+      id = data.length; // Atualiza o ID para o próximo valor após o último item carregado
+    }
+}
+
+function addRow(data) {
     const row = document.createElement('tr');
     const tdID = document.createElement('td');
     const tdName = document.createElement('td');
     const tdDescription = document.createElement('td');
-
-    tdID.innerText = id;
-    tdName.innerText = tableName;
-    tdDescription.innerText = tableDescription;
-
-    row.setAttribute('id', id);
+    
+    tdID.innerText = data.id;
+    tdName.innerText = data.name;
+    tdDescription.innerText = data.description;
+    
+    row.setAttribute('id', data.id);
     row.appendChild(tdID);
     row.appendChild(tdName);
     row.appendChild(tdDescription);
     
     tbody.appendChild(row);
-
-    id++
 }
+
+// Carrega os dados do localStorage ao carregar a página
+loadFromLocalStorage();
 
 btnList.addEventListener('click', () => {
     if (document.querySelector('td')) {
@@ -52,38 +86,41 @@ btnEdit.addEventListener('click', function() {
     if (rowToEdit) {
         const newName = prompt(`New NAME: `);
         const newDescription = prompt(`New DESCRIPTION: `)
-
-        // if (newName && newDescription) {
-        //     rowToEdit.innerHTML = `
-        //         <td>${idEdit}</td>
-        //         <td>${newName}</td>
-        //         <td>${newDescription}</td>
-        //     `
-
+        
         if (newName && newDescription) {
             const tdName = rowToEdit.querySelector('td:nth-child(2)');
             const tdDescription = rowToEdit.querySelector('td:nth-child(3)');
-      
+            
             tdName.innerText = newName;
             tdDescription.innerText = newDescription;
-
+            
         } else {
             alert('Novos nome e descrição devem ser preenchidos')
         }
-
+        
     } else {
         alert('ID não encontrado')
     }
-        
+    
 })
 
 btnDel.addEventListener('click', function() {
     const idDel = prompt('Digite o ID que deseja deletar: ');
     const rowToRemove = document.getElementById(idDel);
-    
+  
     if (rowToRemove) {
-        tbody.removeChild(rowToRemove);
+      tbody.removeChild(rowToRemove);
+      removeFromLocalStorage(idDel);
     } else {
-        alert('ID não encontrado');
+      alert('ID não encontrado');
     }
 });
+  
+function removeFromLocalStorage(id) {
+    let tableData = localStorage.getItem('tableData');
+    if (tableData) {
+      tableData = JSON.parse(tableData);
+      const updatedData = tableData.filter(item => item.id.toString() !== id);
+      localStorage.setItem('tableData', JSON.stringify(updatedData));
+    }
+}
